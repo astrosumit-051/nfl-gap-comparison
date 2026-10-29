@@ -1,0 +1,9 @@
+# Raw data and derived caches are too large for git
+*.csv
+cache/
+output/
+.Rproj.user/
+.Rhistory
+.RData
+.Ruserdata
+.DS_Store
