@@ -45,7 +45,7 @@ line_info <- list()
 
 for (wk in WEEKS) {
   trk <- readRDS(file.path(CACHE_DIR, sprintf("tracking_runs_wk%d.rds", wk)))
-  flip_tracking(trk)
+  trk <- flip_tracking(trk)
 
   # Key frames from the event column
   ev <- unique(trk[!is.na(event), .(gameId, playId, frameId, event)])

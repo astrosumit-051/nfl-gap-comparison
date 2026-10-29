@@ -44,8 +44,9 @@ run_success <- function(down, yards_to_go, yards_gained) {
 }
 
 # Flip a play that goes left so the offense always moves toward +x.
-# After flipping, +y is the offense's left.
+# After flipping, +y is the offense's left. Use as: trk <- flip_tracking(trk)
 flip_tracking <- function(dt) {
+  dt <- setalloccol(dt)   # tables read with readRDS need this before := adds columns
   dt[playDirection == "left", `:=`(
     x   = FIELD_LENGTH - x,
     y   = FIELD_WIDTH - y,

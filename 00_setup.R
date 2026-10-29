@@ -10,7 +10,7 @@
 
 # ---- Packages ---------------------------------------------------------------
 
-needed <- c("data.table", "ggplot2")
+needed <- c("data.table", "ggplot2", "gganimate", "av")
 missing <- needed[!vapply(needed, requireNamespace, logical(1), quietly = TRUE)]
 if (length(missing) > 0) install.packages(missing)
 
