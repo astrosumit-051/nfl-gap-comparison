@@ -81,8 +81,9 @@ for (wk in WEEKS) {
                by = .(gameId, playId)]
 
   # A tight end is on the line if he is level with the linemen (within 1 yard
-  # of their mean depth) and within 3 yards of the end lineman.
-  te <- at_snap[position == "TE"][ol_box, on = .(gameId, playId), nomatch = 0L]
+  # of their mean depth) and within 3 yards of the end lineman. A TE who is the
+  # ball carrier keeps the carrier role.
+  te <- at_snap[position == "TE" & role != "carrier"][ol_box, on = .(gameId, playId), nomatch = 0L]
   te <- te[abs(x - ol_x) <= 1 & y >= ol_ymin - 3 & y <= ol_ymax + 3 &
              (y < ol_ymin | y > ol_ymax)]
   trk[te, on = .(gameId, playId, nflId), role := "TE_line"]
