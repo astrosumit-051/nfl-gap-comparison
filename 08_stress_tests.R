@@ -202,6 +202,12 @@ zone_cut <- rbindlist(lapply(c(1.5, 1.75, 2.0, 2.25, 2.5), function(cut) {
 }))
 cat("   Payoff by zone split point (yards of line flow):\n")
 print(dcast(zone_cut, cut ~ zone, value.var = c("runs", "diff"))[, lapply(.SD, function(v) round(v, 3))])
+# A gap closed at the handoff (width 0 after the spacer) is not always closed when
+# the runner gets there: success of taken gaps by width and free defenders
+closed <- gaps[is_taken == TRUE, .(runs = .N, success = mean(success)),
+               by = .(closed_at_handoff = width == 0, unblocked = fifelse(n_unblocked <= 1, "0 or 1", "2 or more"))]
+cat("   Success through the gap taken, by width at the handoff and free defenders:\n")
+print(closed[order(closed_at_handoff, unblocked), lapply(.SD, function(v) if (is.double(v)) round(v, 3) else v)])
 fwrite(groups_wide, file.path(OUT_DIR, "stress_groups.csv"))
 fwrite(zone_cut, file.path(OUT_DIR, "stress_zone_split.csv"))
 
@@ -242,6 +248,7 @@ headline <- function(cmp_v, gaps_v) {
              diff = diff_success(d), p = p_success(d),
              inside_zone = sd("inside_zone"), other = sd("other"), gap = sd("gap"), outside_zone = sd("outside_zone"),
              good_read = d[group == "Good read", mean(success)], worked_as_designed = d[group == "Worked as designed", mean(success)],
+             good_read_is_top_group = d[!is.na(group), .(s = mean(success)), by = group][which.max(s), group] == "Good read",
              split_half_r = cor(half$r_TRUE, half$r_FALSE))
 }
 
