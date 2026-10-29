@@ -25,6 +25,8 @@ runs[, `:=`(
 
 # Edge players per side, long format (center k0, guard k1, tackle k2, end man k3)
 edge_ids <- rbind(
+  merge(edges[, .(gameId, playId, side, k = 0L)], ctr_id, by = c("gameId", "playId"))[
+    , .(gameId, playId, side, k, nflId = center_id)],
   edges[, .(gameId, playId, side, k = 1L, nflId = id1)],
   edges[, .(gameId, playId, side, k = 2L, nflId = id2)],
   edges[, .(gameId, playId, side, k = 3L, nflId = id3)]
@@ -43,11 +45,11 @@ for (wk in WEEKS) {
                                                                  .(gameId, playId, ry = y)]
   at <- trk[rh, on = .(gameId, playId, frameId), nomatch = 0L, .(gameId, playId, nflId, role, y)]
 
-  center <- merge(at, ctr_id, by.x = c("gameId", "playId", "nflId"),
-                  by.y = c("gameId", "playId", "center_id"))[, .(gameId, playId, cy = y)]
   e <- merge(edge_ids, at[, .(gameId, playId, nflId, y)], by = c("gameId", "playId", "nflId"))
   e[pullers, on = .(gameId, playId, nflId), y := i.snap_y]   # pullers keep their snap spot
-  e <- merge(e, center, by = c("gameId", "playId"))
+  e <- order_edges(e)                                         # same edges as 03_gaps.R
+  center <- unique(e[k == 0L, .(gameId, playId, cy = y)])
+  e <- merge(e[k > 0L], center, by = c("gameId", "playId"))
   e[, u := abs(y - cy)]
   d <- dcast(e, gameId + playId + side ~ k, value.var = "u")
   setnames(d, c("1", "2", "3"), c("d1", "d2", "d3"), skip_absent = TRUE)

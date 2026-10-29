@@ -53,3 +53,20 @@ gap_of_point <- function(pts, edges) {
   pts[, c("center_y", "d1", "d2", "d3") := NULL]
   pts[]
 }
+
+# Keep each side's edges in order out from the center (k = 0 is the center).
+# By the handoff a lineman can cross inside his neighbour (a tackle blocking
+# down past a puller's snap spot, say). He is then held at that neighbour's
+# spot, so the gap between them is closed rather than inverted, and the best
+# gap and the gap taken see the same gaps. `e` needs gameId, playId, side, k
+# and y, and optionally vy.
+order_edges <- function(e) {
+  setorder(e, gameId, playId, side, k)
+  e[, src := {
+    reach <- if (side[1] == "L") cummax(y) else cummin(y)
+    cummax(fifelse(y == reach, seq_len(.N), 0L))
+  }, by = .(gameId, playId, side)]
+  cols <- intersect(c("y", "vy"), names(e))
+  e[, (cols) := lapply(.SD, function(v) v[src]), by = .(gameId, playId, side), .SDcols = cols]
+  e[, src := NULL][]
+}

@@ -62,21 +62,22 @@ ctr_id <- linemen[is_center == TRUE, .(gameId, playId, center_id = nflId)]
 edge_long <- merge(edge_long, ctr_id, by = c("gameId", "playId"))
 edge_long[k == 0L, nflId := center_id][, center_id := NULL]
 edge_long <- edge_long[!is.na(nflId)]
-edge_long <- merge(edge_long, ho[, .(gameId, playId, nflId, ex = x, ey = y, evy = vy)],
+edge_long <- merge(edge_long, ho[, .(gameId, playId, nflId, ex = x, y, vy)],
                    by = c("gameId", "playId", "nflId"))
 # A pulling lineman has left his spot by the handoff. His gaps stay where he
 # lined up, so use his position at the snap, standing still.
 pullers <- readRDS(file.path(CACHE_DIR, "scheme.rds"))[!is.na(puller_id), .(gameId, playId, nflId = puller_id)]
 pullers <- merge(pullers, linemen[, .(gameId, playId, nflId, snap_y = y)], by = c("gameId", "playId", "nflId"))
-edge_long[pullers, on = .(gameId, playId, nflId), `:=`(ey = i.snap_y, evy = 0)]
+edge_long[pullers, on = .(gameId, playId, nflId), `:=`(y = i.snap_y, vy = 0)]
+edge_long <- order_edges(edge_long)
 
-inner <- edge_long[k < 3L, .(gameId, playId, side, k_out = k + 1L, in_y = ey, in_vy = evy, in_x = ex)]
-outer <- edge_long[k > 0L, .(gameId, playId, side, k_out = k, out_y = ey, out_vy = evy, out_x = ex)]
+inner <- edge_long[k < 3L, .(gameId, playId, side, k_out = k + 1L, in_y = y, in_vy = vy, in_x = ex)]
+outer <- edge_long[k > 0L, .(gameId, playId, side, k_out = k, out_y = y, out_vy = vy, out_x = ex)]
 gaps <- merge(inner, outer, by = c("gameId", "playId", "side", "k_out"), all.x = TRUE)
 
 # Edge gaps: outside the outermost edge player on each side
 outermost <- edge_long[, .SD[which.max(k)], by = .(gameId, playId, side)]
-edge_gaps <- outermost[, .(gameId, playId, side, k_out = k + 1L, in_y = ey, in_vy = evy, in_x = ex)]
+edge_gaps <- outermost[, .(gameId, playId, side, k_out = k + 1L, in_y = y, in_vy = vy, in_x = ex)]
 gaps <- rbind(gaps[!is.na(out_y)], edge_gaps, fill = TRUE)
 gaps[, letter := GAP_LETTERS[k_out]]
 gaps[, is_edge := is.na(out_y)]
@@ -97,14 +98,20 @@ carrier <- ho[role == "carrier", .(gameId, playId, rx = x, ry = y, rvx = vx, rvy
 gaps <- merge(gaps, carrier, by = c("gameId", "playId"))
 gaps <- merge(gaps, runs[, .(gameId, playId, los_x)], by = c("gameId", "playId"))
 
+time_runner <- function(g) {
+  g[, run_dist := sqrt((gx - rx)^2 + (gy - ry)^2)]
+  g[, run_v0 := (rvx * (gx - rx) + rvy * (gy - ry)) / pmax(run_dist, 1e-6)]
+  g[, t_runner := time_to_reach(run_dist, run_v0)]
+}
+
 gaps[, `:=`(gx = los_x, gy = (in_y + out_y) / 2)]   # aim point: middle of the gap at the line
-gaps[, run_dist := sqrt((gx - rx)^2 + (gy - ry)^2)]
-gaps[, run_v0 := (rvx * (gx - rx) + rvy * (gy - ry)) / pmax(run_dist, 1e-6)]
-gaps[, t_runner := time_to_reach(run_dist, run_v0)]
+time_runner(gaps)
 gaps[, t_proj := pmin(t_runner, MAX_PROJECTION)]
 gaps[, width := pmax(abs((out_y + out_vy * t_proj) - (in_y + in_vy * t_proj)) - SPACER, 0)]
-# Aim point moves with the projected edges
+# Aim point moves with the projected edges. Time the runner again to that
+# point, the same point the defenders are timed to below.
 gaps[, gy := ((in_y + in_vy * t_proj) + (out_y + out_vy * t_proj)) / 2]
+time_runner(gaps)
 
 # ---- Unblocked defenders who arrive first ----------------------------------------
 

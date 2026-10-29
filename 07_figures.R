@@ -45,11 +45,17 @@ pick_play <- function(grp) {
   if (nrow(cand) == 0) cand <- cmp[group == grp & taken_source == "crossed_los"]
   cand[order(-abs(best_score - taken_score), gameId, playId)][1]
 }
-good <- pick_play("Good read")
+# The report and slides walk through these two plays; search for others only if
+# a play no longer lands in its group.
+good <- cmp[gameId == 2022091800 & playId == 2172 & group == "Good read"]   # Raheem Mostert
+if (nrow(good) == 0) good <- pick_play("Good read")
 save_fig(plot_play_handoff(good$gameId, good$playId), "fig_play_good_read.png", 9, 6.5)
 
-closed <- cmp[group == "Followed the call into a closed gap" & taken_source == "crossed_los" &
-                ballCarrierId %in% regular & playResult <= 1][order(-left_on_table, gameId, playId)][1]
+closed <- cmp[gameId == 2022092900 & playId == 1627 &
+                group == "Followed the call into a closed gap"]               # Joe Mixon
+if (nrow(closed) == 0)
+  closed <- cmp[group == "Followed the call into a closed gap" & taken_source == "crossed_los" &
+                  ballCarrierId %in% regular & playResult <= 1][order(-left_on_table, gameId, playId)][1]
 save_fig(plot_play_handoff(closed$gameId, closed$playId), "fig_play_followed_call.png", 9, 6.5)
 
 # ---- The four groups -----------------------------------------------------------------

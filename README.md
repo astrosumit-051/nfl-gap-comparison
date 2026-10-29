@@ -57,4 +57,5 @@ definitions), `plot_play.R` (play still and animation).
 - Gaps: A (center to guard), B (guard to tackle), C (tackle to end man, or the edge
   if there is no end man), D (outside the end man). L and R are the offense's left
   and right. Gaps are drawn from the line at the handoff; a pulling lineman keeps
-  his snap spot.
+  his snap spot. A lineman who has crossed inside his neighbour by then closes
+  the gap between them.
