@@ -3,7 +3,9 @@
 #   1. Runner side from tracking vs the side in playDescription
 #   2. Gap taken vs the play-by-play direction (end / tackle / guard / middle)
 #   3. Read rate in weeks 1-4 vs weeks 5-9: if it does not hold up, it is not a skill
-#   4. Animations of 10 runs per scheme, to check the scheme labels by eye
+#   4. Chance baseline: how often a runner blind to the defense, going the same
+#      way, would hit the best gap
+#   5. Animations of 10 runs per scheme, to check the scheme labels by eye
 #
 # Output: output/validation_*.csv, output/animations/<scheme>/*.mp4
 
@@ -57,7 +59,26 @@ cat(if (ct$p.value < 0.05 && ct$estimate > 0)
   "   The read rate does not carry over between halves: treat runner rankings as noise.\n")
 fwrite(halves, file.path(OUT_DIR, "validation_split_half.csv"))
 
-# ---- 4. Scheme animations ------------------------------------------------------------------
+# ---- 4. Chance baseline -------------------------------------------------------------------
+
+# A runner blind to the defense: shuffle the gaps runners took among plays with
+# the same scheme, the same set of gaps and the same heading side at the handoff
+# (the side of the gap he can reach soonest). A uniform pick among the play's
+# gaps ignores that runners mostly go where the play is called, so it is too low.
+gaps    <- readRDS(file.path(CACHE_DIR, "gaps_scored.rds"))
+heading <- gaps[order(t_runner), .SD[1], by = .(gameId, playId)][, .(gameId, playId, head_side = side)]
+gapset  <- gaps[, .(gapset = paste(sort(gap), collapse = ","), n_gaps = .N), by = .(gameId, playId)]
+bl <- merge(merge(cmp[!is.na(took_best)], heading, by = c("gameId", "playId")), gapset, by = c("gameId", "playId"))
+set.seed(355)
+hits <- replicate(200, bl[, .(best_gap, g = sample(gap_taken)), by = .(scheme, gapset, head_side)][, mean(g == best_gap)])
+baseline <- data.table(read_rate = mean(bl$took_best), uniform_pick = mean(1 / bl$n_gaps), blind_same_way = mean(hits),
+                       blind_lo = unname(quantile(hits, 0.025)), blind_hi = unname(quantile(hits, 0.975)))
+cat(sprintf(paste0("\n4. Read rate %.3f vs a blind runner going the same way %.3f (95%% range %.3f to %.3f);",
+                   " uniform pick %.3f\n"),
+            baseline$read_rate, baseline$blind_same_way, baseline$blind_lo, baseline$blind_hi, baseline$uniform_pick))
+fwrite(baseline, file.path(OUT_DIR, "validation_baseline.csv"))
+
+# ---- 5. Scheme animations ------------------------------------------------------------------
 
 if (MAKE_ANIMATIONS) {
   set.seed(355)
@@ -70,5 +91,5 @@ if (MAKE_ANIMATIONS) {
   }
   fwrite(pick[, .(scheme, gameId, playId, runner = ballCarrierDisplayName, design_gap, gap_taken)],
          file.path(OUT_DIR, "animations", "index.csv"))
-  cat(sprintf("\n4. Wrote %d animations to %s\n", nrow(pick), file.path(OUT_DIR, "animations")))
+  cat(sprintf("\n5. Wrote %d animations to %s\n", nrow(pick), file.path(OUT_DIR, "animations")))
 }

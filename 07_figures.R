@@ -41,7 +41,7 @@ save_fig <- function(p, name, w = 8, h = 5) {
 regular <- unique(ranked$ballCarrierId)
 pick_play <- function(grp) {
   cand <- cmp[group == grp & taken_source == "crossed_los" & ballCarrierId %in% regular &
-                playResult >= 6 & playResult <= 20 & substr(design_gap, 1, 1) != substr(best_gap, 1, 1)]
+                yards >= 6 & yards <= 20 & substr(design_gap, 1, 1) != substr(best_gap, 1, 1)]
   if (nrow(cand) == 0) cand <- cmp[group == grp & taken_source == "crossed_los"]
   cand[order(-abs(best_score - taken_score), gameId, playId)][1]
 }
@@ -55,7 +55,7 @@ closed <- cmp[gameId == 2022092900 & playId == 1627 &
                 group == "Followed the call into a closed gap"]               # Joe Mixon
 if (nrow(closed) == 0)
   closed <- cmp[group == "Followed the call into a closed gap" & taken_source == "crossed_los" &
-                  ballCarrierId %in% regular & playResult <= 1][order(-left_on_table, gameId, playId)][1]
+                  ballCarrierId %in% regular & yards <= 1][order(-left_on_table, gameId, playId)][1]
 save_fig(plot_play_handoff(closed$gameId, closed$playId), "fig_play_followed_call.png", 9, 6.5)
 
 # ---- The four groups -----------------------------------------------------------------
@@ -106,8 +106,8 @@ save_fig(p, "fig_best_vs_not.png", 8.5, 4.5)
 
 # ---- Runner read rates ------------------------------------------------------------------------
 
-ntab <- gaps[, .N, by = .(gameId, playId)]
-chance <- mean(1 / ntab$N)
+# Chance line: a runner blind to the defense but going the same way (06_validate.R)
+chance <- fread(file.path(OUT_DIR, "validation_baseline.csv"))$blind_same_way
 league <- mean(cmp$took_best, na.rm = TRUE)
 ranked[, runner := factor(runner, levels = ranked[order(read_rate), runner])]
 p <- ggplot(ranked, aes(read_rate, runner)) +
@@ -115,7 +115,7 @@ p <- ggplot(ranked, aes(read_rate, runner)) +
   geom_vline(xintercept = league, colour = COL_INK, linetype = "dashed", linewidth = 0.4) +
   geom_segment(aes(x = chance, xend = read_rate, yend = runner), colour = COL_GRID, linewidth = 0.6) +
   geom_point(colour = COL_SERIES_1, size = 2.8) +
-  annotate("text", x = chance, y = 0.4, label = sprintf("Random pick %.0f%%", 100 * chance),
+  annotate("text", x = chance, y = 0.4, label = sprintf("Blind pick, same way %.0f%%", 100 * chance),
            hjust = -0.05, colour = COL_INK, size = 3) +
   annotate("text", x = league, y = 0.4, label = sprintf("All runs %.0f%%", 100 * league),
            hjust = -0.05, colour = COL_INK, size = 3) +
@@ -124,6 +124,6 @@ p <- ggplot(ranked, aes(read_rate, runner)) +
   labs(title = "Read rate of runners with 100+ carries",
        subtitle = "Share of runs where the runner took the highest-scoring gap at the handoff",
        x = "Read rate", y = NULL,
-       caption = "Weeks 1 to 9, 2022. Rates do not carry over between weeks 1-4 and 5-9 (see validation), so read the order loosely.") +
+       caption = "Weeks 1 to 9, 2022. Runners differ only a little beyond chance (08_stress_tests.R), so read the order loosely.") +
   chart_theme()
 save_fig(p, "fig_runner_read_rates.png", 8.5, 6)

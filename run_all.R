@@ -18,3 +18,5 @@ for (s in scripts) {
   source(s, echo = FALSE)
   rm(list = setdiff(ls(), "scripts"))
 }
+
+# Optional: source("08_stress_tests.R") for the stress tests (a few minutes)

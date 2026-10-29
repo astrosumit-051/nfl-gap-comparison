@@ -35,6 +35,7 @@ writes compact copies of the run plays to `cache/`. Delete `cache/` to rebuild i
 | `05_score_and_compare.R` | 3.3, 3.5 | Logistic gap score, best gap, the four designed/best/taken groups, runner read rates |
 | `06_validate.R` | 3.6 | Side check, gap taken vs play-by-play, split-half read rate, scheme animations |
 | `07_figures.R` | | Report figures, including the play visualization |
+| `08_stress_tests.R` | | Optional, run after `run_all.R` (a few minutes): chance baselines, payoff checks, scheme checks, skill tests, and 15 reruns with one setting changed at a time |
 
 Shared code lives in `R/`: `config.R` (paths, constants), `gaps.R` (gap
 definitions), `plot_play.R` (play still and animation).
@@ -45,6 +46,7 @@ definitions), `plot_play.R` (play still and animation).
 - `fig_groups.png`, `fig_best_vs_not.png`, `fig_runner_read_rates.png`: summary charts
 - `gap_model.csv`, `comparison_groups.csv`, `runner_read_rates.csv`: result tables
 - `validation_*.csv`, `animations/<scheme>/*.mp4`: checks
+- `stress_*.csv`: stress tests from `08_stress_tests.R`
 
 ## Data rules and definitions
 
@@ -53,7 +55,8 @@ definitions), `plot_play.R` (play still and animation).
   and 2 or less) is kept and flagged (489). Designed QB runs have no handoff and are
   left out (390). 5,563 runs remain.
 - Run tracking starts 0.5 s before the snap (snap = frame 6), not at the handoff.
-- Success = 40% of yards to go on 1st down, 60% on 2nd, 100% on 3rd and 4th.
+- Success = 40% of yards to go on 1st down, 60% on 2nd, 100% on 3rd and 4th, using
+  the yards the run gained before penalties (`prePenaltyPlayResult`).
 - Gaps: A (center to guard), B (guard to tackle), C (tackle to end man, or the edge
   if there is no end man), D (outside the end man). L and R are the offense's left
   and right. Gaps are drawn from the line at the handoff; a pulling lineman keeps

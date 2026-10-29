@@ -93,9 +93,10 @@ plot_play_handoff <- function(game_id, play_id) {
                  hjust = 0, size = 3.2, colour = "#0b0b0b") } +
     coord_fixed(xlim = xlim, ylim = ylim, expand = FALSE) +
     labs(title = sprintf("%s, %s", cmp$ballCarrierDisplayName, SCHEME_LABELS[cmp$scheme]),
-         subtitle = sprintf("Designed %s, best %s, taken %s. Result: %d yards. Offense moves left to right.",
+         subtitle = sprintf("Designed %s, best %s, taken %s. Result: %d yard%s. Offense moves left to right.",
                             fifelse(is.na(cmp$design_gap), "none", cmp$design_gap),
-                            cmp$best_gap, cmp$gap_taken, run$playResult),
+                            cmp$best_gap, cmp$gap_taken, run$yards,
+                            fifelse(abs(run$yards) == 1, "", "s")),
          caption = sprintf("Game %s, play %s. Field at the handoff; line is the runner's path after it.",
                            game_id, play_id)) +
     field_theme()

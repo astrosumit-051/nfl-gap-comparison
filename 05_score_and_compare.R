@@ -22,7 +22,7 @@ scheme <- readRDS(file.path(CACHE_DIR, "scheme.rds"))
 gaps   <- readRDS(file.path(CACHE_DIR, "gaps.rds"))
 taken  <- readRDS(file.path(CACHE_DIR, "gap_taken.rds"))
 
-gaps <- merge(gaps, runs[, .(gameId, playId, success, playResult)], by = c("gameId", "playId"))
+gaps <- merge(gaps, runs[, .(gameId, playId, success, yards)], by = c("gameId", "playId"))
 gaps <- merge(gaps, taken[, .(gameId, playId, gap_taken)], by = c("gameId", "playId"))
 gaps[, is_taken := gap == gap_taken]
 
@@ -56,7 +56,7 @@ best <- gaps[, .SD[1], by = .(gameId, playId)][, .(gameId, playId, best_gap = ga
 taken_score <- gaps[is_taken == TRUE, .(gameId, playId, taken_score = score)]
 
 cmp <- runs[, .(gameId, playId, week, ballCarrierId, ballCarrierDisplayName, carrier_pos,
-                success, playResult, short_yardage)]
+                success, yards, short_yardage)]
 cmp <- merge(cmp, scheme[, .(gameId, playId, scheme, design_side, design_gap)],
              by = c("gameId", "playId"))
 cmp <- merge(cmp, taken[, .(gameId, playId, gap_taken, taken_source)], by = c("gameId", "playId"))
@@ -77,7 +77,7 @@ cmp[!is.na(design_gap), group := fcase(
 )]
 groups <- cmp[!is.na(group), .(runs = .N, share = round(.N / sum(!is.na(cmp$group)), 3),
                                 success = round(mean(success), 3),
-                                mean_yards = round(mean(playResult), 2)), by = group][order(-runs)]
+                                mean_yards = round(mean(yards), 2)), by = group][order(-runs)]
 cat("\nDesigned / best / taken groups (gap and zone runs):\n"); print(groups)
 fwrite(groups, file.path(OUT_DIR, "comparison_groups.csv"))
 
@@ -85,7 +85,7 @@ fwrite(groups, file.path(OUT_DIR, "comparison_groups.csv"))
 
 cat("\nOutcome by whether the runner took the best gap (all analysis runs):\n")
 print(cmp[!is.na(took_best), .(runs = .N, success = round(mean(success), 3),
-                               mean_yards = round(mean(playResult), 2)), by = took_best])
+                               mean_yards = round(mean(yards), 2)), by = took_best])
 cat("\nRead rate by scheme:\n")
 print(cmp[, .(runs = .N, read_rate = round(mean(took_best, na.rm = TRUE), 3),
               designed_gap_taken = round(mean(gap_taken == design_gap), 3)), by = scheme])
@@ -97,7 +97,7 @@ runner <- cmp[!is.na(took_best), .(
   read_rate = mean(took_best),
   left_on_table = mean(left_on_table, na.rm = TRUE),
   success = mean(success),
-  yards_per_carry = mean(playResult)
+  yards_per_carry = mean(yards)
 ), by = .(ballCarrierId, runner = ballCarrierDisplayName, position = carrier_pos)]
 ranked <- runner[carries >= MIN_CARRIES][order(-read_rate)]
 ranked[, rank := seq_len(.N)]
