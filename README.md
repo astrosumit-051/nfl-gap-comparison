@@ -51,6 +51,27 @@ full run you can rerun a single step.
 | 7 | | Report figures, including the play visualization |
 | 8 | | Stress tests: chance baselines, payoff checks, scheme checks, skill tests, and 15 reruns with one setting changed at a time |
 
+## Gap explorer (Shiny app)
+
+`gap_explorer/app.R` is an interactive companion to the report. Source
+`nfl_gap_comparison.R` once first (`MAKE_ANIMATIONS=FALSE` is fine), because the
+app reads `cache/`. Then open `gap_explorer/app.R` in RStudio and click
+**Run App**, or run `shiny::runApp("gap_explorer")` from the repo folder.
+
+- **Film room**: filter the runs by group, scheme, runner, offense and result,
+  pick a play, and play it frame by frame. The field is seen from behind the
+  offense. Each gap is shaded by its score at the handoff, and the designed, best
+  and taken gaps are marked. A table lists every gap's width, unblocked
+  defenders, arrival time and score, and a chart shows the success rate of each
+  group in the filter.
+- **Be the running back**: the play stops at the handoff and you click the gap
+  you would hit. The app then shows the best, designed and taken gaps and the
+  result, and keeps your read rate and expected success next to the real backs'.
+- **How it works**: the three gaps and the five groups in plain words.
+
+The app loads one week of tracking at a time, so the first play from a new
+week takes a second or two.
+
 ## Outputs (`output/`)
 
 - `fig_play_good_read.png`, `fig_play_followed_call.png`: play pictures at the handoff
