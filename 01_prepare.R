@@ -15,8 +15,11 @@ players <- readRDS(file.path(CACHE_DIR, "players.rds"))
 
 # ---- Play-level flags -------------------------------------------------------
 
+# Yards the run itself gained. playResult also counts penalty yards (a holding
+# call after a 6-yard run shows as -4), which say nothing about the runner's gap.
+runs[, yards := prePenaltyPlayResult]
 runs[, `:=`(
-  success       = run_success(down, yardsToGo, playResult),
+  success       = run_success(down, yardsToGo, yards),
   short_yardage = down %in% 3:4 & yardsToGo <= SHORT_YARDAGE_TO,
   inside_opp5   = yardlineSide == defensiveTeam & yardlineNumber <= GOAL_LINE_CUTOFF
 )]
@@ -45,7 +48,7 @@ line_info <- list()
 
 for (wk in WEEKS) {
   trk <- readRDS(file.path(CACHE_DIR, sprintf("tracking_runs_wk%d.rds", wk)))
-  flip_tracking(trk)
+  trk <- flip_tracking(trk)
 
   # Key frames from the event column
   ev <- unique(trk[!is.na(event), .(gameId, playId, frameId, event)])
