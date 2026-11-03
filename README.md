@@ -9,36 +9,47 @@ play was designed for, the best gap at the handoff, and the gap the runner took.
 1. Install R (4.3 or newer) and RStudio.
 2. Get the Big Data Bowl 2024 CSVs (`games.csv`, `plays.csv`, `players.csv`,
    `tracking_2024_week_1.csv` to `_9.csv`). They are not in this repo.
-3. Tell the scripts where the CSVs are. The default is Sumit's path in
-   `R/config.R`. Everyone else adds one line to `~/.Renviron` and restarts R:
+3. Tell the code where the CSVs are. The default is Sumit's path, set near the
+   top of `nfl_gap_comparison.R`. Everyone else adds one line to `~/.Renviron`
+   and restarts R:
 
    ```
    NFL_DATA_DIR=/path/to/nfl-big-data-bowl-2024
    ```
 
-4. Open `nfl-gap-comparison.Rproj` and run `source("run_all.R")`.
+4. Open `nfl-gap-comparison.Rproj`, open `nfl_gap_comparison.R` and click
+   **Source**.
 
-The first run takes about 15 minutes, most of it rendering 40 animations. Set
-`MAKE_ANIMATIONS=FALSE` in `~/.Renviron` to skip them (about 4 minutes in all).
-`00_setup.R` installs missing packages (data.table, ggplot2, gganimate, av) and
-writes compact copies of the run plays to `cache/`. Delete `cache/` to rebuild it.
+All the code is in that one file. The first run takes about 15 minutes, about
+half of it rendering 40 animations. It installs missing packages (data.table, ggplot2,
+gganimate, av) and writes compact copies of the run plays to `cache/`. Delete
+`cache/` to rebuild it. Three switches at the top of the file (or in
+`~/.Renviron`) skip the slow parts:
 
-## Scripts
-
-| Script | Plan step | What it does |
+| Switch | Default | Skips |
 | --- | --- | --- |
-| `00_setup.R` | | Packages, data check, keep clean designed runs only |
-| `01_prepare.R` | 3.1 | Flip plays, snap and handoff frames, line of scrimmage, linemen, on-line TEs, where the runner crosses the line |
-| `02_scheme.R` | 3.2 | Scheme from lineman movement (gap/pull, inside zone, outside zone, other) and the designed gap |
-| `03_gaps.R` | 3.3 | At the handoff: every gap's projected width and the unblocked defenders who reach it before the runner |
-| `04_gap_taken.R` | 3.4 | The gap where the runner crosses the line |
-| `05_score_and_compare.R` | 3.3, 3.5 | Logistic gap score, best gap, the four designed/best/taken groups, runner read rates |
-| `06_validate.R` | 3.6 | Side check, gap taken vs play-by-play, split-half read rate, scheme animations |
-| `07_figures.R` | | Report figures, including the play visualization |
-| `08_stress_tests.R` | | Optional, run after `run_all.R` (a few minutes): chance baselines, payoff checks, scheme checks, skill tests, and 15 reruns with one setting changed at a time |
+| `MAKE_ANIMATIONS` | `TRUE` | The 40 scheme animations in step 6 |
+| `RUN_STRESS_TESTS` | `TRUE` | Step 8, the stress tests |
+| `RUN_VARIANTS` | `TRUE` | Step 8 part 6, the 15 reruns with one setting changed |
 
-Shared code lives in `R/`: `config.R` (paths, constants), `gaps.R` (gap
-definitions), `plot_play.R` (play still and animation).
+## Steps in `nfl_gap_comparison.R`
+
+RStudio's outline (the list icon at the top right of the editor) jumps between
+the steps. Each step reads what the earlier steps saved in `cache/`, so after one
+full run you can rerun a single step.
+
+| Step | Plan step | What it does |
+| --- | --- | --- |
+| Settings and helpers | | Data path, switches, gap definitions, the gap and score rules, play pictures |
+| 0 | | Packages, data check, keep clean designed runs only |
+| 1 | 3.1 | Flip plays, snap and handoff frames, line of scrimmage, linemen, on-line TEs, where the runner crosses the line |
+| 2 | 3.2 | Scheme from lineman movement (gap/pull, inside zone, outside zone, other) and the designed gap |
+| 3 | 3.3 | At the handoff: every gap's projected width and the unblocked defenders who reach it before the runner |
+| 4 | 3.4 | The gap where the runner crosses the line |
+| 5 | 3.3, 3.5 | Logistic gap score, best gap, the four designed/best/taken groups, runner read rates |
+| 6 | 3.6 | Side check, gap taken vs play-by-play, split-half read rate, chance baseline, scheme animations |
+| 7 | | Report figures, including the play visualization |
+| 8 | | Stress tests: chance baselines, payoff checks, scheme checks, skill tests, and 15 reruns with one setting changed at a time |
 
 ## Outputs (`output/`)
 
@@ -46,7 +57,7 @@ definitions), `plot_play.R` (play still and animation).
 - `fig_groups.png`, `fig_best_vs_not.png`, `fig_runner_read_rates.png`: summary charts
 - `gap_model.csv`, `comparison_groups.csv`, `runner_read_rates.csv`: result tables
 - `validation_*.csv`, `animations/<scheme>/*.mp4`: checks
-- `stress_*.csv`: stress tests from `08_stress_tests.R`
+- `stress_*.csv`: stress tests from step 8
 
 ## Data rules and definitions
 
