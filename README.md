@@ -59,15 +59,15 @@ app reads `cache/`. Then open `gap_explorer/app.R` in RStudio and click
 **Run App**, or run `shiny::runApp("gap_explorer")` from the repo folder.
 
 - **Film room**: filter the runs by group, scheme, runner, offense and result,
-  pick a play, and play it frame by frame. The field is seen from behind the
-  offense. Each gap is shaded by its score at the handoff, and the designed, best
-  and taken gaps are marked. A table lists every gap's width, unblocked
-  defenders, arrival time and score, and a chart shows the success rate of each
-  group in the filter.
-- **Be the running back**: the play stops at the handoff and you click the gap
-  you would hit. The app then shows the best, designed and taken gaps and the
-  result, and keeps your read rate and expected success next to the real backs'.
-- **How it works**: the three gaps and the five groups in plain words.
+  pick a play, and play it frame by frame. Tiles at the top give the group, the
+  designed, best and taken gaps and the result. The field is seen from behind the
+  offense, and the gap list beside it shows every gap's score, width, unblocked
+  defenders and runner arrival time, with the designed, best and taken gaps
+  tagged.
+- **Be the running back**: a round of 10 plays. Each play stops at the handoff;
+  you pick a gap from the list, see the answer, then press play to watch the run.
+  The round ends with your score and expected success next to the real backs'.
+- **Gap guide**: what LA, RB, RC, LD and the rest mean, and the five groups.
 
 The app loads one week of tracking at a time, so the first play from a new
 week takes a second or two.
